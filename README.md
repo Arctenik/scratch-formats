@@ -1,2 +1,1 @@
-# scratch-formats
- Info about data formats designed for Scratch
+https://arctenik.github.io/scratch-formats/
