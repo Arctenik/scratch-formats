@@ -1,0 +1,156 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+
+
+.info {
+	font-size: 1.1em;
+}
+
+.code {
+	font-family: "Source Code Pro", Consolas, monospace;
+	font-size: 1.4em;
+}
+
+.infoCode {
+	font-family: "Source Code Pro", Consolas, monospace;
+	font-size: 1.1em;
+}
+
+.error {
+	color: #c00;
+}
+
+.errorPart, .emptyErrorPart {
+	background: #fdd;
+}
+
+.emptyErrorPart {
+	color: transparent;
+	white-space: pre;
+}
+
+.emptyErrorPart::after {
+	content: " ";
+}
+
+.charSetRange {
+	background: #f5f5f5;
+}
+
+.highlight, .highlight .charSetRange {
+	background: #dfd;
+}
+
+.highlight.underlineHighlight {
+	background: none;
+	text-decoration: #0d0 underline;
+}
+
+#scInfoElem > * {
+	margin-left: 0.8em;
+}
+
+.scLabel {
+	color: darkgray;
+	margin-right: 0.2em;
+}
+
+.excluded {
+	color: lightgray;
+}
+
+.excluded .highlight {
+	color: #00d300;
+}
+
+.charSetInfoDec {
+	color: darkgray;
+}
+
+/*
+.charSetRangeBorder {
+	border-left: 0.05em solid lightgray;
+}
+
+.charSetRangeRightBorder {
+	border-right: 0.05em solid lightgray;
+}
+
+.highlight .charSetRangeBorder, .highlight .charSetRangeRightBorder {
+	border-color: #00d300;
+}
+*/
+
+.zhNonSyntax {
+	color: lightgray;
+}
+
+.zhProp {
+	margin-left: 0.8em;
+}
+
+.zhProp.zhScs {
+	margin-left: 0.5em;
+}
+
+.zhPreSep {
+	color: darkgray;
+}
+
+.zhSep {
+	font-weight: bold;
+	color: gray;
+}
+
+.zhSep .highlight {
+	color: #008000;
+}
+
+.zhBigSep {
+	margin: 0.7em;
+}
+
+.zhDataSep {
+	margin: 0 1em;
+	font-weight: bold;
+	color: darkgray;
+}
+
+.zhCharSet {
+	text-decoration: dashed underline;
+	text-decoration-color: #93c7ea;
+}
+
+.zhExclusions {
+	text-decoration: dotted underline;
+	text-decoration-color: #d86f46;
+}
+
+.zhPartSepNum {
+	font-weight: normal;
+}
+
+.zhCharPrefix {
+	color: lightgray;
+}
+
+.highlight .zhCharPrefix {
+	color: #00d300;
+}
+
+.outNum {
+	font-weight: bold;
+	border-left: 0.05em solid lightgray;
+	border-right: 0.05em solid lightgray;
+	padding: 0 0.15em;
+}
+
+.outItem:nth-child(n + 2) {
+	margin-left: 0.5em;
+}
+
+.outNum.highlight {
+	border-color: #00d300;
+}
+

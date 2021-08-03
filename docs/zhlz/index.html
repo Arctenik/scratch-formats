@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+		<title>ZHLZ format info</title>
+		
+		<link rel="icon" href="../icon.png">
+		
+		<link rel="stylesheet" href="../content.css">
+		<link rel="stylesheet" href="../ex-hl.css">
+
+	</head>
+	
+	<body>
+		
+		<a href="..">&lt; Scratch formats</a>
+		
+		<h1>ZHLZ format info</h1>
+		<p>
+			ZHLZ (/&#x02c8;zo&#x028A;l&#x02cc;zi&#x02d0;/, for "Z-Header Lempel-Ziv") is a simple text-based lossless compression format, based on the <a href="https://en.wikipedia.org/wiki/LZ77_and_LZ78" target="_blank">Lempel-Ziv</a> family of algorithms. It utilizes <a href="../zheader">Z-Header</a>.
+		</p>
+		<p>
+			Example project: <a href="https://scratch.mit.edu/projects/490870154/" target="_blank">Z-Header + ZHLZ</a>
+		</p>
+		
+		<h2>Format description</h2>
+		<p>
+			<i>Version: 1.0</i>
+		</p>
+		<p>
+			ZHLZ compression is done by replacing sections of repeated data with copy operations that copy earlier data. Each copy operation is represented using a <i>length</i> and a <i>distance,</i> in that order. The distance represents a distance back in the data to go to in order to start copying (with a distance of 1 referring to the most recent character), and the length represents the number of characters to copy (starting at the position indicated by the distance and moving forward in the data from there). During decompression, copying a range of data should be done one character at a time, so that the length can be greater than the distance (which works because the number of characters available to be copied will grow as the copy operation is carried out).
+		</p>
+		<p>
+			This description will use some example compressed data to demonstrate elements of the format. Certain parts of the description, underlined and colored green, can be hovered over or clicked to highlight relevant parts of the example data.
+		</p>
+		<p>
+			The example data before compression is:
+		</p>
+		<p>
+			<span class="example code"><i><span class="ex1copy1prev">Give a man a<span class="ex1copy1src"> fire </span>and he's warm for a day<span class="ex1ucomma">,</span> but set</span> fire to him and he's warm for the rest of his life.</i></span>
+		</p>
+		<p>
+			(Terry Pratchett, <i>Jingo</i>)
+		</p>
+		<p>
+			And after compression:
+		</p>
+		<p>
+			<span class="example code"><span class="ex1header">zhlz,,,09,</span><span class="ex1ll">1</span><span class="ex1dl">1</span><span class="ex1body">Give a man a fire and he's warm for a day<span class="ex1ccomma">,,</span> but set<span class="ex1copy1">,0037</span>to him<span class="ex1copy2">,1344</span>the rest of his life.</span></span>
+		</p>
+		<p>
+			The compressed data <span class="hl ex1header">begins</span> with a <a href="../zheader">Z-Header</a>, which should provide a list of 3 or more characters. The recommended format code for the header is <span class="inline-code">zhlz</span>. The first character provided by the header is used as an <i>insertion marker,</i> while the rest of the characters are used as digits (with the first of those characters representing the 0 digit, etc) to represent any numbers used in the compression syntax. The base used to represent the numbers is equal to the number of digits provided.
+		</p>
+		<p>
+			In this example, the characters provided by the header are <span class="inline-code">,0123456789</span>. The first character, <span class="inline-code">,</span>, is used as the insertion marker, and the rest of the characters, numerals <span class="inline-code">0</span> to <span class="inline-code">9</span> (of which there are 10), are used as digits to represent numbers in base 10.
+		</p>
+		<p>
+			Following the header are two single-digit numbers, the <span class="hl ex1ll"><i>length length</i></span> and the <span class="hl ex1dl"><i>distance length.</i></span> For both of these values, the actual value used is 1 greater than the value written. Here, the length length is written as <span class="inline-code">1</span>, meaning the actual length length is 2. The distance length in this case has the same value. These values represent the fixed lengths of the length and distance numbers used in copy operations.
+		</p>
+		<p>
+			In the <span class="hl ex1body">body</span> of the data, characters by default represent themselves, and during decompression they're just copied to output as-is. The one exception is the insertion marker, which is used as a prefix to indicate copy operations. In order to represent an insertion marker character that appears in the data, an escape sequence must be used, consisting of an insertion marker prefixed with another insertion marker. In this example, <span class="inline-code">,</span> <span class="hl ex1ucomma">appears</span> in the data, and, since <span class="inline-code">,</span> is the insertion marker, it's represented as a <span class="hl ex1ccomma">sequence</span> of two <span class="inline-code">,</span> in the compressed data.
+		</p>
+		<p>
+			A copy operation consists of the insertion marker, followed by the length and the distance of the operation. The actual distance used is 1 greater than the distance as written, and the actual length is (length as written) + n, where n is the minimum length that will actually achieve compression, i.e. (length length) + (distance length) + 2. In this case, n = 2 + 2 + 2 = 6.
+		</p>
+		<p>
+			The <span class="hl ex1copy1">first copy operation</span> in this example has a length written as <span class="inline-code">00</span> and a distance written as <span class="inline-code">37</span> (interpreted as decimal numbers 0 and 37 using the digits provided by the header), meaning the actual length is 0 + n = 6, and the actual distance is 37 + 1 = 38. Going back 38 characters in the output data <span class="hl ex1copy1prev">preceding</span> the copy operation leads to the space before the first occurrence of the word "fire". The length of 6 indicates that the <span class="hl ex1copy1src">section</span> of data to be copied is the word "fire" and the two spaces on either side of it. This copy operation produces the word "fire" and surrounding spaces in the phrase "set fire to him".
+		</p>
+		<p>
+			The <span class="hl ex1copy2">second copy operation</span> has length and distance written as <span class="inline-code">13</span> and <span class="inline-code">44</span>, meaning 19 and 45 respectively. This copies the fragment "and he's warm for" along with the surrounding spaces.
+		</p>
+		
+		
+		
+		<script src="../ex-hl.js"></script>
+
+	</body>
+	
+	
+</html>

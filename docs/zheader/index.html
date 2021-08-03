@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+		<title>Z-Header format info</title>
+		
+		<link rel="icon" href="../icon.png">
+		
+		<link rel="stylesheet" href="../content.css">
+		<link rel="stylesheet" href="../ex-hl.css">
+
+	</head>
+	
+	<body>
+		
+		<a href="..">&lt; Scratch formats</a>
+		
+		<h1>Z-Header format info</h1>
+		<p>
+			Z-Header is a text-based header format, intended to be used in other data formats to allow implementation of those formats within arbitrary restricted character sets.
+		</p>
+		<p>
+			Example project: <a href="https://scratch.mit.edu/projects/490870154/" target="_blank">Z-Header + ZHLZ</a>
+		</p>
+		<p>
+			A tool for rendering z-headers with fancy syntax highlighting can be found at <a href="./formatter">./formatter</a>.
+		</p>
+		
+		<h2>Format description</h2>
+		<p>
+			<i>Version: 1.0</i>
+		</p>
+		<p>
+			Fundamentally, a z-header just represents a sequence of characters interspersed with non-negative integers. This information may then be utilized in the encoding/decoding of the host format to which the z-header is attached. The characters provided by the header are intended to represent a set of characters to be used in the syntax of the host format, and the numbers are primarily intended to be used to delineate different sections of the character sequence; however, no prescription is made for how the information provided by z-headers should be used, and depending on the host format that information may be used in different ways.
+		</p>
+		<p>
+			For an example of how Z-Header might be used in a host format, see <a href="../zhlz">ZHLZ</a>.
+		</p>
+		<p>
+			One of the fundamental concepts used by Z-Header is the idea of <i>syntax characters,</i> which are characters used in the syntax of the header itself. There are three syntax characters that are actually used in this version of the format. Due to the nature of the format as something designed to work with arbitrary character sets, the syntax characters have no predifined values. Throughout most examples in this document, however, the first syntax character will be represented as <span class="inline-code">/</span> forward slash, the second syntax character as <span class="inline-code">:</span> colon, and the third syntax character as <span class="inline-code">#</span> hash symbol.
+		</p>
+		<p>
+			As the format is fairly complex and can't be represented well using simple examples, I will begin with a comprehensive overview of the format before providing examples of complete headers showcasing specific components.
+		</p>
+		
+		<h3>Overview</h3>
+		<p>
+			Some general notes:
+		</p>
+		<ul>
+			<li>In this overview, <span class="inline-code">/</span>, <span class="inline-code">:</span>, and <span class="inline-code">#</span> will be used interchangeably with "the first syntax character", "the second syntax character", and "the third syntax character", respectively. It is important to note that this is just for the sake of readability, and in practice the syntax characters may have other values.</li>
+			<li>Z-headers as defined in this document are case-insensitive; in reading the format or choosing information to be encoded in a header, "q" for example should be considered identical to "Q".</li>
+			<li>Since z-headers are meant to be components of other formats, certain z-header properties may be dependent on the host format (i.e., a general-purpose Z-Header decoder may need to be provided with some information about the format the header is attached to, and certain other decoders may be designed with a specific host format in mind).</li>
+		</ul>
+		<h4>Format code</h4>
+		<p>
+			The header begins with a 4-character code providing a hint as to what host format the header is attached to. In general, this code is <strong>not</strong> intended to reliably indicate the format; rather, it is primarily intended to be, when possible, a way for human readers to distinguish different formats from each other.
+		</p>
+		<p>
+			One caveat is that, depending on the host format, the format code may have a specific required value, or may even be omitted or replaced with other information; in any of these cases, however, it should be made clear in the host format's own documentation when and how these atypical properties are used.
+		</p>
+		<h4>Parameters</h4>
+		<p>
+			Following the format code is a list of syntax characters. This list terminates as soon as a duplicate character appears. There must be at least one syntax character, and up to three syntax characters may be required for certain Z-Header features. More syntax characters may appear, but are not actually used in the header syntax. All of the provided syntax characters will appear at the beginning of the sequence of characters represented by the header.
+		</p>
+		<p>
+			Example: <span class="inline-code">/:</span> indicates <span class="inline-code">/</span> as the first syntax character and <span class="inline-code">:</span> as the second syntax character (but does not specify a third syntax character). The header's output will begin with the characters <span class="inline-code">/</span> and <span class="inline-code">:</span>. (Also, to be clear, the header could just as easily list <span class="inline-code">ab</span> instead to have the syntax characters be <span class="inline-code">a</span> and <span class="inline-code">b</span>!)
+		<p>
+		<p>
+			Directly following the list of syntax characters, an indication of what character set the header should use may optionally appear. A character set in this sense does <em>not</em> impose any restrictions on what characters can appear; rather, a character set allows ranges of characters to be represented efficiently using their endpoints in the character set. If present, the character set indicator consists of a <span class="inline-code">#</span> (third syntax character) followed by a predefined prefix code written using syntax characters 1-3 (see <a href="#Character sets">character sets</a> below).
+		</p>
+		<p>
+			If a character set indicator is <em>not</em> present, the host format may provide a default character set. Otherwise, if neither the header nor the host format provide a character set, character set 1 (see again <a href="#Character sets">character sets</a>) is used.
+		</p>
+		<p>
+			After the syntax character list and, if present, the character set indicator, there may optionally appear a list of syntax characters to exclude from output. If present, this list is indicated by a <span class="inline-code">:</span> (second syntax character), which is followed by a list of syntax characters, in the same order that they were originally specified, to be excluded from automatically appearing in the character sequence represented by the header. For example, <span class="inline-code">:/#</span> causes the first and third syntax characters to be excluded from automatic output, meaning only <span class="inline-code">:</span> will automatically appear.
+		</p>
+		<h4>Explicit output</h4>
+		<p>
+			The rest of the header is prefixed by a <span class="inline-code">/</span> (first syntax character), and constitutes the main description of information represented by the header. This information consists of a sequence of one or more <i>partitions,</i> separated by <i>partition separators</i>.
+		</p>
+		<p>
+			A <i>partition separator</i> consists of a non-negative integer enclosed by <span class="inline-code">#</span> (the third syntax character) on either side. If the integer is zero, it's represented as the empty string (i.e., the partition separator is just <span class="inline-code">##</span> with nothing inbetween). Otherwise, the number is represented in binary <em>without leading zeros,</em> using syntax characters 1-2 as digits 0-1, respectively. For example, <span class="inline-code">#::/#</span> represents a separator with the number 6, since <span class="inline-code">::/</span> represents the binary number 110, i.e. decimal 6.
+		</p>
+		<p>
+			In the header's output, the numbers will, conceptually at least, appear between the characters represented by the adjacent partitions. This is intended to allow the numbers to deliniate the partitions and provide information about them, but they may be used for other purposes.
+		</p>
+		<p>
+			A <i>partition</i> consists of a sequence of one or more <i>sub-sequences,</i> separated by the syntax characters <span class="inline-code">#/</span>.
+		</p>
+		<p>
+			A <i>sub-sequence</i> consists of a <i>char-sequence</i> followed by a <i>range-sequence,</i> separated by the syntax character <span class="inline-code">/</span>.
+		</p>
+		<p>
+			A <i>char-sequence</i> is just a list of individual characters to be added to the output. For example, the char-sequence <span class="inline-code">abc</span> adds <span class="inline-code">a</span>, <span class="inline-code">b</span>, and <span class="inline-code">c</span>, in that order, to the list of characters represented by the header.
+		</p>
+		<p>
+			A <i>range-sequence</i> (primarily) describes ranges of characters from the header's character set to be added to the output. Importantly, these ranges automatically exclude any syntax characters that are already included automatically in the output. Elements of a range-sequence are as follows:
+		</p>
+		<ul>
+			<li>A character within the character set, followed by another character within the character set, represents the range of characters in the character set that begins with the first character and ends with the second character. For example, using character set 1, <span class="inline-code">cf</span> outputs characters <span class="inline-code">c</span>, <span class="inline-code">d</span>, <span class="inline-code">e</span>, and <span class="inline-code">f</span>. If the second character appears before the first in the character set, the range is still read from left to right, but wraps back to the beginning of the character set once it reaches the character set's end. For instance, <span class="inline-code">|"</span> represents the sequence <span class="inline-code">|</span> <span class="inline-code">}</span> <span class="inline-code">~</span> <span class="inline-code">!</span> <span class="inline-code">"</span> &ndash; the range begins at <span class="inline-code">|</span>, continues to the end of the character set at <span class="inline-code">~</span>, wraps back around to the beginning of the character set at <span class="inline-code">!</span>, and continues to the end of the range at <span class="inline-code">"</span>.</li>
+			<li>A character within the character set that is <em>not</em> followed by a character within the character set, either because it's followed by a character outside the character set or because it's at the end of the range-sequence, represents a range starting with the given character and ending at the end of the character set. For example, <span class="inline-code">y</span> at the end of a range-sequence represents the sequence <span class="inline-code">y</span> <span class="inline-code">z</span> <span class="inline-code">{</span> <span class="inline-code">|</span> <span class="inline-code">}</span> <span class="inline-code">~</span>.</li>
+			<li>A character outside of the character set represents that individual character.</li>
+		</ul>
+		<p>
+			Additionally, anywhere that a literal character can appear, an escape sequence may appear instead. An escape sequence consists of a <span class="inline-code">:</span> (second syntax character) followed by another syntax character, and represents that latter syntax character. If an escape sequence appears in a range, the syntax character <em>is</em> included in output. For instance, although the range <span class="inline-code">.1</span> represents <span class="inline-code">.</span> <span class="inline-code">0</span> <span class="inline-code">1</span> (excluding <span class="inline-code">/</span>, which would appear before <span class="inline-code">0</span>), the range <span class="inline-code">:/1</span> represents <span class="inline-code">/</span> <span class="inline-code">0</span> <span class="inline-code">1</span>, since the escape sequence <span class="inline-code">:/</span> is used to explicitly include <span class="inline-code">/</span> as the beginning of the range.
+		</p>
+		<p>
+			Finally, a special case: if the "explicit output" part of the header produces no output (neither characters nor numbers), the entire character set, excluding syntax characters that have already been output, is added to the output list.
+		</p>
+		<h4>End of header</h4>
+		<p>
+			The header is terminated by a <span class="inline-code">/</span> (first syntax character), after which follows the data of the host format.
+		</p>
+		
+		<h3>Example headers</h3>
+		<p>
+			The sequence of data represented by each example header will be listed below the header itself; the items will be space-separated, and the numbers will appear enclosed in pipes and bolded (while the characters retain default styling).
+		</p>
+		<p>
+			It is assumed in these examples that the host format does not provide a default character set, and therefore predefined character set 1 is used as a default.
+		</p>
+		<p>
+			Parts of these descriptions are colored and underlined in green. You can hover over or click them to highlight relevant parts of the example headers.
+		</p>
+		
+		<h4>A minimal header</h4>
+		<p>
+			One of the simplest headers is this:
+		</p>
+		<p>
+			<span class="example code"><span class="ex1format">expl</span><span class="ex1sc1">/</span><span class="ex1psep">/</span><span class="ex1data">/</span><span class="ex1end">/</span></span>
+		</p>
+		<div class="example code">
+			<i>Output:</i> <span class="ex1sc">/</span> <span class="ex1nsc">! " # $ % &amp; ' ( ) * + , - <span class="ex1nosc">. <!-- </span> <span class="ex1nosc"> --> 0</span> 1 2 3 4 5 6 7 8 9 : ; &lt; = &gt; ? @ [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~</span>
+		</div>
+		<p>
+			The header begins with the <span class="hl ex1format">format code</span> "expl" (an abbreviation of "example"). The <span class="hl ex1sc1">next character</span> following that defines the first syntax character as <span class="inline-code">/</span>, which will now <span class="hl ex1sc">appear</span> at the beginning of the output. As the <span class="hl ex1psep">next character after that</span> has already appeared in the list of syntax characters, it indicates the end of the list, meaning that <span class="inline-code">/</span> is the <em>only</em> syntax character. And, as the <span class="hl ex1psep">character in question</span> is equal to the first syntax character, it marks the beginning of the "explicit output" part of the header.
+		</p>
+		<p>
+			The <span class="hl ex1data">explicit output</span> consists of a single partition, with a single sub-sequence, with an empty char-sequence and empty range-sequence. Note that, although the char- and range-sequences are empty, the syntax character separating them still must appear. Because no output is actually specified, the entire character set will be <span class="hl ex1nsc">added</span> to output, <span class="hl ex1nosc">excluding</span> <span class="inline-code">/</span> since it's a syntax character.
+		</p>
+		<p>
+			Finally, the header <span class="hl ex1end">is closed</span> with the first syntax character.
+		</p>
+		
+		<h4>Basic output</h4>
+		<p>
+			<span class="example code"><span class="ex2format">expl</span><span class="ex2sc1">/</span><span class="ex2psep">/</span><span class="ex2data"><span class="ex2ssseq ex2cseq"><span class="ex2cschar ex2csint">a</span><span class="ex2cschar ex2csint">1</span><span class="ex2cschar ex2csext">&cent;</span><span class="ex2cschar ex2csint">x</span></span><span class="ex2sssep">/</span><span class="ex2ssseq ex2rseq"><span class="ex2r1">lp</span><span class="ex2r2">z</span><span class="ex2r3">&sect;</span><span class="ex2r4">79</span></span></span><span class="ex2end">/</span></span>
+		</p>
+		<div class="example code">
+			<i>Output:</i> <span class="ex2sc1">/</span> <span class="ex2cschar ex2csint">a</span> <span class="ex2cschar ex2csint">1</span> <span class="ex2cschar ex2csext">&cent;</span> <span class="ex2cschar ex2csint">x</span> <span class="ex2r1">l m n o p</span> <span class="ex2r2">z { | } ~</span> <span class="ex2r3">&sect;</span> <span class="ex2r4">7 8 9</span>
+		</div>
+		
+		<p>
+			This header starts out in the same way as the previous example&mdash;it has the <span class="hl ex2format">format code</span> "expl", <span class="inline-code">/</span> as the <span class="hl ex2sc1">first syntax character</span>, and then <span class="hl ex2psep">the marker</span> for the beginning of the explicit output. The <span class="hl ex2data">explicit output</span> is also similar in that it has a single partition with a single sub-sequence, but this one has some actual content. The sub-sequence is separated into <span class="hl ex2ssseq">two parts</span> by the <span class="hl ex2sssep">first syntax character</span>.
+		</p>
+		<p>
+			The <span class="hl ex2cseq">first part</span>, i.e. the char-sequence, consists simply of <span class="hl ex2cschar">individual characters</span> that get added to the output one-by-one. Note that <span class="hl ex2csext">a character</span> outside the character set can appear here, and since these are just individual characters, it behaves exactly the same as the <span class="hl ex2csint">other characters</span>.
+		</p>
+		<p>
+			The <span class="hl ex2rseq">second part</span> is the range-sequence. It begins with the characters <span class="inline-code">l</span> and <span class="inline-code">p</span>, which are both in the character set, meaning that <span class="hl ex2r1">they represent</span> a range from <span class="inline-code">l</span> to <span class="inline-code">p</span> taken from the character set.
+		</p>
+		<p>
+			The next character, <span class="inline-code">z</span>, is within the character set, but the character following it is not; therefore, the <span class="inline-code">z</span> <span class="hl ex2r2">represents</span> a range from <span class="inline-code">z</span> to the end of the character set. Since the <span class="inline-code">&sect;</span> is outside the character set, <span class="hl ex2r3">it represents</span> an individual character; the following two characters then represent <span class="hl ex2r4">another range</span>.
+		</p>
+		<p>
+			The header is again <span class="hl ex2end">closed</span> by the first syntax character.
+		</p>
+		
+		<h4>The second syntax character</h4>
+		<p>
+			<span class="example code">expl<span class="ex3sc">/:</span><span class="ex3exsep">:</span><span class="ex3ex">/</span>/<span class="ex3data"><span class="ex3cs">a</span><span class="ex3cs">b</span><span class="ex3cs ex3esc">:/</span><span class="ex3cs">c</span>/<span class="ex3r">.;</span></span>/</span>
+		</p>
+		<div class="example code">
+			<i>Output:</i> <span class="ex3sc2">:</span> <span class="ex3cs">a</span> <span class="ex3cs">b</span> <span class="ex3cs ex3esc">/</span> <span class="ex3cs">c</span> <span class="ex3r">. <span class="ex3rsc">/</span> 0 1 2 3 4 5 6 7 8 9 ;</span>
+		</div>
+		<p>
+			Following the format code, this header has <span class="hl ex3sc">two syntax characters</span> before a duplicate appears; the first syntax character is <span class="inline-code">/</span> as before, and the second syntax character is <span class="inline-code">:</span>.
+		</p>
+		<p>
+			<span class="hl ex3exsep">The character</span> following the syntax character list is equal to the second syntax character, signaling a list of syntax characters to exclude from automatic output. The <span class="hl ex3ex">only character</span> listed is <span class="inline-code">/</span>, followed by another <span class="inline-code">/</span> indicating the beginning of the explicit output. Since <span class="inline-code">/</span> has been excluded from automatic output, only <span class="inline-code">:</span> will <span class="hl ex3sc2">appear</span> automatically at the beginning of the output.
+		</p>
+		<p>
+			The <span class="hl ex3data">explicit output</span> consists of a single sub-sequence. The char-sequence of this sub-sequence lists <span class="hl ex3cs">four characters</span>, <span class="hl ex3esc">one of which</span> is an escaped <span class="inline-code">/</span>. Note that it <em>does</em> need to be escaped, even though it's been excluded from automatic output, since it still functions as a syntax character.
+		</p>
+		<p>
+			The range-sequence has <span class="hl ex3r">a single range</span> from <span class="inline-code">.</span> to <span class="inline-code">;</span>. In the character set, this range covers both of the syntax characters, but only <span class="inline-code">/</span> actually <span class="hl ex3rsc">appears</span> in the output range, since it hasn't already been automatically output.
+		</p>
+		
+		<h4>The third syntax character</h4>
+		<p>
+			<span class="example code">expl<span class="ex4sc">/:#</span><span class="ex4setsep">#</span><span class="ex4set">/</span><span class="ex4psep">/</span><span class="ex4data"><span class="ex4part ex4p1"><span class="ex4p1ss"><span class="ex4p1ssc">a</span><span class="ex4p1ssc">s</span><span class="ex4p1ssc">d</span>/<span class="ex4p1ssr">wz</span></span>#/<span class="ex4p1ss"><span class="ex4p1ssc">7</span><span class="ex4p1ssc">q</span><span class="ex4p1ssc">~</span>/<span class="ex4p1ssr">46</span></span></span><span class="ex4partsep">#<span class="ex4partnum">:/:</span>#</span><span class="ex4part ex4p2"><span class="ex4p2ssc">3</span><span class="ex4p2ssc">2</span><span class="ex4p2ssc">1</span>/<span class="ex4p2ssr">hk</span></span></span>/</span>
+		</p>
+		<div class="example code">
+			<i>Output:</i> <span class="ex4sc">/ : #</span> <span class="ex4part ex4p1"><span class="ex4p1ss"><span class="ex4p1ssc">a</span> <span class="ex4p1ssc">s</span> <span class="ex4p1ssc">d</span> <span class="ex4p1ssr">w x y z</span></span> <span class="ex4p1ss"><span class="ex4p1ssc">7</span> <span class="ex4p1ssc">q</span> <span class="ex4p1ssc">~</span> <span class="ex4p1ssr">4 5 6</span></span></span> <span class="ex4partnum"><b>|5|</b></span> <span class="ex4part ex4p2"><span class="ex4p2ssc">3</span> <span class="ex4p2ssc">2</span> <span class="ex4p2ssc">1</span> <span class="ex4p2ssr">h i j k</span></span>
+		</div>
+		<p>
+			This header adds a third syntax character, <span class="inline-code">#</span>, in the list of <span class="hl ex4sc">syntax characters</span>. Following that list is <span class="hl ex4setsep">an instance</span> of the third syntax character, marking a character set indicator. <span class="hl ex4set">The text</span> after that matches the predefined code <span class="inline-code">/</span>, indicating character set 1. In this case, it's not especially useful to explicitly state the character set, but it could be useful if the host format has its own default character set and you want to use character set 1 instead.
+		</p>
+		<p>
+			After the character set indicator is the <span class="hl ex4psep">beginning</span> of the <span class="hl ex4data">explicit output</span>. The explicit output consists of <span class="hl ex4part">two partitions</span>. The <span class="hl ex4partsep">partition separator</span> between the two partitions contains the <span class="hl ex4partnum">number</span> <span class="inline-code">:/:</span>, i.e. binary 101 or decimal 5.
+		</p>
+		<p>
+			The <span class="hl ex4p1">first partition</span> contains two <span class="hl ex4p1ss">sub-sequences</span>, separated by <span class="inline-code">#/</span>. Having multiple sub-sequences like this can be useful for outputting individual characters <em>after</em> outputting ranges. Both of these sub-sequences have <span class="hl ex4p1ssc">individual characters</span> and <span class="hl ex4p1ssr">ranges</span>.
+		</p>
+		<p>
+			The <span class="hl ex4p2">second partition</span> consists of only one sub-sequence, which also has <span class="hl ex4p2ssc">individual characters</span> and a <span class="hl ex4p2ssr">range</span>.
+		</p>
+		
+		<h4>Syntax character values</h4>
+		<p>
+			Throughout this document, I've used <span class="inline-code">/</span>, <span class="inline-code">:</span>, and <span class="inline-code">#</span> as the first three syntax characters. However, I think it's important to emphasize that the syntax characters don't have to have those values, so here's an example where they don't:
+		</p>
+		<p>
+			<span class="example code"><span class="ex5format">expl</span><span class="ex5sc">0xy</span><span class="ex5psep">0</span><span class="ex5data"><span class="ex5ss ex5ss1"><span class="ex5ss1c">+</span><span class="ex5ss1c">-</span><span class="ex5ssssep">0</span><span class="ex5ss1r">#&amp;</span></span><span class="ex5sssep">y0</span><span class="ex5ss ex5ss2"><span class="ex5ss2c">?</span><span class="ex5ss2c">!</span><span class="ex5ss2c">.</span>0</span></span><span class="ex5end">0</span></span>
+		</p>
+		<div class="example code">
+			<i>Output:</i> <span class="ex5sc">0 x y</span> <span class="ex5ss1"><span class="ex5ss1c">+</span> <span class="ex5ss1c">-</span> <span class="ex5ss1r"># $ % &amp;</span></span> <span class="ex5ss2"><span class="ex5ss2c">?</span> <span class="ex5ss2c">!</span> <span class="ex5ss2c">.</span></span>
+		</div>
+		<p>
+			This header begins with the <span class="hl ex5format">format code</span> "expl" as with the other examples, but then the <span class="hl ex5sc">syntax characters</span> listed are <span class="inline-code">0</span>, <span class="inline-code">x</span>, and <span class="inline-code">y</span> for the first, second, and third syntax characters, respectively. The syntax character list is followed by <span class="hl ex5psep">an instance</span> of the first syntax character, <span class="inline-code">0</span>, marking the beginning of the explicit output.
+		</p>
+		<p>
+			The <span class="hl ex5data">explicit output</span> consists of a single partition with two <span class="hl ex5ss">sub-sequences</span>, <span class="hl ex5sssep">separated</span> by <span class="inline-code">y0</span> (i.e. the third syntax character followed by the first). The <span class="hl ex5ss1">first sub-sequence</span> contains both <span class="hl ex5ss1c">individual characters</span> and a <span class="hl ex5ss1r">range</span>, <span class="hl ex5ssssep">separated</span> by <span class="inline-code">0</span>, while the <span class="hl ex5ss2">second sub-sequence</span> contains only <span class="hl ex5ss2c">individual characters</span>.
+		</p>
+		<p>
+			The header is <span class="hl ex5end">closed</span> by <span class="inline-code">0</span>, the first syntax character.
+		</p>
+		
+		<h3 id="Character sets">Character sets</h3>
+		<p>
+			Here is a list of defined character sets, with prefix codes represented here using syntax characters <span class="inline-code">/</span>, <span class="inline-code">:</span>, and <span class="inline-code">#</span>, and numeric IDs derived by converting the prefix codes from bijective base 3 (with syntax characters 1-3 as digits 1-3 respectively) to decimal.
+		</p>
+		<p>
+			Currently, there is only one character set defined here:
+		</p>
+		<ul>
+			<li><span class="inline-code">/</span> (dec 1) &ndash; Defined as the collection of all non-control, non-whitespace, non-uppercase characters from the Basic Latin Unicode block, ordered by code point; i.e.: <span class="inline-code">!"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</span></li>
+		</ul>
+		
+		
+		
+		<script src="../ex-hl.js"></script>
+
+	</body>
+	
+	
+</html>

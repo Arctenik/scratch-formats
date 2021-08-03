@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+		<title>Z-Header syntax highlighting</title>
+		
+		<link rel="icon" href="../../icon.png">
+		
+		<link rel="stylesheet" href="../../content.css">
+		<link rel="stylesheet" href="zheader-formatter.css">
+
+	</head>
+	
+	<body>
+		
+		<a href="..">&lt; Z-Header format info</a>
+		
+		<h1>Z-Header syntax highlighting</h1>
+		<p>
+			Enter a header (on its own or attached to something) to get info and formatting; hover over parts of the info/header to highlight related text; the character set indicator gets underlined in dashed blue and the syntax character exclusions in dotted orange; everything else is hopefully evident if you have a basic understanding of the format.
+		</p>
+		
+		<h2>Host format settings</h2>
+		<p>
+			(You won't need to change these settings for basic headers such as the examples given in the format description.)
+		</p>
+		<p>
+			Default character set: <input id="defaultCharsInp" type="text" value="/1/"> | (ID enclosed in slashes, or literal character list)
+		</p>
+		<p>
+			Syntax start: <input id="startInp" type="number" value="4">
+		</p>
+		
+		<h2>Header</h2>
+		<p>
+			<!-- Text with header: <input id="headerInp" type="text" value="expl/:##/::/asd/wz#/7q~/46#:/:#321/hk/alksdlajsdksajld"> -->
+			Text with header: <input id="headerInp" type="text" value="">
+		</p>
+		
+		<h2>Results</h2>
+		
+		<h3>Header info</h3>
+		<p>
+			<span class="info">Syntax characters:</span><span id="scInfoElem" class="code"></span>
+		</p>
+		<p>
+			<span class="info">Character set:</span><span id="charSetInfoIdElem" class="infoCode"></span><span id="charSetElem" class="code"></span>
+		</p>
+		
+		<h3>Formatted header</h3>
+		<p id="formattedElem" class="code"></p>
+		
+		<h3>Header output</h3>
+		<p id="outputElem" class="code"></p>
+		
+		
+		
+		<script src="zheader-formatter.js"></script>
+		
+	</body>
+	
+	
+</html>

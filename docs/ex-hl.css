@@ -1,0 +1,38 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+
+
+.code {
+	font-family: "Source Code Pro", Consolas, monospace;
+}
+
+.hl {
+	border-bottom: 1px dashed lightgreen;
+	color: green;
+}
+
+.example:hover {
+	background: #eee;
+}
+
+.inline-code {
+	font-family: "Source Code Pro", Consolas, monospace;
+	background: #eee;
+    padding: 0 0.2em;
+}
+
+.selected {
+	background: #eeffee;
+}
+
+/*
+.sticky {
+	position: sticky;
+	top: 0;
+	background: white;
+	border: 1px solid #eee;
+	padding: 0 0.5em;
+}
+*/
+
