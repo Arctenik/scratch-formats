@@ -3,6 +3,7 @@
 let defaultCharsInp = document.getElementById("defaultCharsInp"),
 	startInp = document.getElementById("startInp"),
 	headerInp = document.getElementById("headerInp"),
+	headerTrimInp = document.getElementById("headerTrimInp"),
 	scInfoElem = document.getElementById("scInfoElem"),
 	charSetInfoIdElem = document.getElementById("charSetInfoIdElem"),
 	charSetElem = document.getElementById("charSetElem"),
@@ -23,8 +24,10 @@ headerInp.addEventListener("change", tryFormatHeader);
 
 
 function tryFormatHeader() {
+	let header = headerInp.value;
+	if (headerTrimInp.checked) header = header.trimStart();
 	try {
-		formatHeader();
+		formatHeader(header);
 	} catch(e) {
 		formattedElem.innerHTML = "";
 		outputElem.innerHTML = "";
@@ -55,7 +58,6 @@ function tryFormatHeader() {
 		outputElem.appendChild(errorElem);
 		
 		if (start !== undefined) {
-			let header = headerInp.value;
 			if (start < 0) {
 				formattedElem.textContent = header;
 				let errorPartElem = document.createElement("span");
@@ -73,15 +75,14 @@ function tryFormatHeader() {
 	}
 }
 
-function formatHeader() {
+function formatHeader(header) {
 	scInfoElem.innerHTML = "";
 	charSetInfoIdElem.innerHTML = "";
 	charSetElem.innerHTML = "";
 	formattedElem.innerHTML = "";
 	outputElem.innerHTML = "";
 	
-	let header = headerInp.value,
-		defaultChars = defaultCharsInp.value,
+	let defaultChars = defaultCharsInp.value,
 		charsIdMatch = /^\/(\d+)\/$/.exec(defaultChars),
 		charsNumId,
 		i = parseInt(startInp.value);
