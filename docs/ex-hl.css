@@ -1,10 +1,10 @@
 
 
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap');
 
 
 .code {
-	font-family: "Source Code Pro", Consolas, monospace;
+	font-family: "IBM Plex Mono", Consolas, monospace;
 }
 
 .hl {
@@ -17,7 +17,7 @@
 }
 
 .inline-code {
-	font-family: "Source Code Pro", Consolas, monospace;
+	font-family: "IBM Plex Mono", Consolas, monospace;
 	background: #eee;
     padding: 0 0.2em;
 }
