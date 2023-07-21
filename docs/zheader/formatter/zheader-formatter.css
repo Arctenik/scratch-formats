@@ -1,20 +1,17 @@
 
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap');
-
-
 .info {
 	font-size: 1.1em;
 }
 
 .code {
-	font-family: "IBM Plex Mono", Consolas, monospace;
+	font-family: var(--font-monospace), monospace;
 	font-size: 1.4em;
 	white-space: pre;
 }
 
 .infoCode {
-	font-family: "IBM Plex Mono", Consolas, monospace;
+	font-family: var(--font-monospace), monospace;
 	font-size: 1.1em;
 	white-space: pre;
 }
@@ -69,20 +66,6 @@
 .charSetInfoDec {
 	color: darkgray;
 }
-
-/*
-.charSetRangeBorder {
-	border-left: 0.05em solid lightgray;
-}
-
-.charSetRangeRightBorder {
-	border-right: 0.05em solid lightgray;
-}
-
-.highlight .charSetRangeBorder, .highlight .charSetRangeRightBorder {
-	border-color: #00d300;
-}
-*/
 
 .zhNonSyntax {
 	color: lightgray;

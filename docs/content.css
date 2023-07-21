@@ -1,6 +1,11 @@
 
 
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap');
+
+
 body {
+	--font-monospace: "IBM Plex Mono";
+	
 	font-family: Arial, sans-serif;
 	max-width: 50em;
 	margin: 4em auto;
