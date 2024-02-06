@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+		<title>aq? format info</title>
+		
+		<link rel="icon" href="../icon.png">
+		
+		<link rel="stylesheet" href="../content.css">
+		<!-- <link rel="stylesheet" href="../ex-hl.css"> -->
+
+	</head>
+	
+	<body>
+		
+		<a href="..">&lt; Scratch formats</a>
+		
+		<h1>aq? format info</h1>
+		<p>
+			An image format meant for exploring compression strategies similar to those used by the <a href="https://qoiformat.org">QOI format</a>.
+		</p>
+		<p>
+			Example project: <a href="https://scratch.mit.edu/projects/693020370/">Experimental QOI-inspired image format</a>
+		</p>
+		
+		<h2>Format description</h2>
+		<p>
+			<i>Version: 1.0</i>
+		</p>
+		<p>
+			(copied from comments in the Scratch project)
+		</p>
+		<p>
+			the 94 non-whitespace non-control basic latin characters are used as digits, with values ordered starting with the standard base64 digits and then continuing with the rest of the characters in order of code point. these digits may be used in various ways; the base64 digits are used to encode base64 values, the other 30 digits may be used for base 30 values or used in smaller subsets to identify parts of the image code, and the entire digit set may be used for base 94 values. (presumably, in a more practical format, the characters would be used in more consistent ways)
+		</p>
+		<p>
+			three strategies are used for compression:
+			<br>- caching -- each rgb color that's encountered is put in a cache so it can be referenced by an index into the cache. the cache's size is determined by the number indices that are possible to represent (see flags and operations), and the cache has every item initialized as 0 (in the case of a cache that stores each color in an individual item, this corresponds to the color black)
+			<br>- run-length encoding -- a run operation can be used to copy the previous color some number of times
+			<br>- color differences -- small differences (as well as small "luma differences") between pixels can be stored as operations that are shorter than an absolute color value
+		</p>
+		<p>
+			the image code consists of the characters "aq?", two base64 digits specifying flags, the width and height, and the compressed data
+		</p>
+		<p>
+			each pair of bits in the flags represents a flag value; in order (starting with the most significant bits) the flags are cache type, index mode, single-digit run mode, run mode, difference mode, and luma mode, all described in the flags section
+		</p>
+		<p>
+			the width and height are each encoded as a sequence of zero or more base64 digits, followed by a base 30 digit; e.g. 137 would be encoded as E> (digit values 4 and 17 => 4 * 30 + 17 = 137)
+		</p>
+		<p>
+			the compressed data is a sequence of operations which maintain a current color (initialized to RGBA 0, 0, 0, 255) and the cache and emit the image's pixel values (in left-to-right top-to-bottom order); see the operations section
+		</p>
+		
+		<h3>Flags</h2>
+		<p>
+			cache type --
+			<br>0 = hashed with single-value; each item of the cache is an individual color, and the colors are placed at indices based on a hash
+			<br>1 = ordered single-value; each item is a unique individual color (aside from the non-unique initial zeros), with the items ordered by how recently they were seen (the most recent being at the lowest index)
+			<br>2 = hashed with rgb; each item stores a value from 0 to 255, with colors being stored as red, green, and blue values in three consecutive items, starting at an index determined by a hash and wrapping back to the beginning of the list once they reach the end
+		</p>
+		<p>
+			other flags are more formulaic and determine the number of characters reserved for marking the beginning of an operation; values 1, 2, and 3 indicate 1, 2, and 4 characters respectfully, while value 0 varies between flags:
+		</p>
+		<p>
+			index mode --
+			<br>0 = multi-digit indices aren't used
+		</p>
+		<p>
+			single-digit run mode --
+			<br>0 = single-digit runs aren't used
+		</p>
+		<p>
+			run mode --
+			<br>0 = 6 characters reserved
+		</p>
+		<p>
+			difference mode and luma mode --
+			<br>0 = 1 character reserved for this operation type, but the operation is three digits long instead of two
+		</p>
+		
+		<h3>Operations</h2>
+		<p>
+			rgb --
+			<br>an rgb operation consists of an rgb value encoded as four base64 digits; it sets the current color's rgb values (but doesn't change the alpha) and emits a pixel
+		</p>
+		<p>
+			other operations consist of some number of base 94 digits, with the first digit coming from an alternate set of digits derived from the characters reserved for the operation type. most operations have their reserved characters determined by the flags, but the alpha operation always has three reserved characters and single-digit indices use all characters remaining after other operation types have had theirs reserved. characters are reserved in order starting with the alpha operation and then going through the other operations in flag order
+		</p>
+		<p>
+			for example, the alpha operation always reserves ! " # which are the first three characters outside the base64 range. ! will represent a first digit of value 0, " a digit of 1, and # a digit of 2; an alpha value of 200 would be encoded as #M (2 * 94 + 12)
+		</p>
+		<p>
+			alpha --
+			<br>two digits; sets the current alpha to the operation value but does *not* emit a pixel
+		</p>
+		<p>
+			index --
+			<br>two digits; sets the current color's rgb to the rgb of a color in the cache and emits a pixel. the index in the cache to get the color from is based on the operation value, with a value of 0 corresponding to the first cache index that can't be referenced by a single-digit index
+		</p>
+		<p>
+			single-digit run --
+			<br>one digit; emits a pixel (of the current color) a number of times equal to the operation value plus one
+		</p>
+		<p>
+			run --
+			<br>two digits; emits a pixel a number of times corresponding to the operation value, with a value of 0 corresponding to the lowest number of times that can't be represented by a single-digit run
+		</p>
+		<p>
+			difference --
+			<br>two or three digits; encodes three difference values, for red, green, and blue. the operation value can be thought of as a three-digit base n number, where n is the floored cube root of the maximum operation value, with each digit corresponding to one of the three difference values. the bounds of the possible difference values are determined by taking -floor(n/2) as the lower bound, and adding n to get the upper bound; a digit of 0 in the base n number then represents a difference equal to the lower bound, and a digit of n-1 represents a difference equal to the upper bound. these differences are added to the current color modulo 256, and a pixel is emitted
+		</p>
+		<p>
+			luma difference --
+			<br>two or three digits; encoded in the same way as a normal difference, except that only the green difference is equal to (current green - prev green); the red difference is instead ((current red - prev red) - (current green - prev green)), and the blue difference is ((current blue - prev blue) - (current green - prev green))
+		</p>
+		
+		
+		
+		<!-- <script src="../ex-hl.js"></script> -->
+
+	</body>
+	
+	
+</html>
